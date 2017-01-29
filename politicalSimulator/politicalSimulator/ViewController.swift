@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SnapKit
 
 class ViewController: UIViewController, UICollisionBehaviorDelegate {
     var flinger: UIView!
@@ -43,6 +44,7 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         //
         //        self.view.addGestureRecognizer(gestureLeft)
         //        self.view.addGestureRecognizer(gestureRight)
+        
         self.view.isUserInteractionEnabled = true
         
         setupStaticViews()
@@ -50,7 +52,52 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         self.dynamicAnimator = UIDynamicAnimator(referenceView: view)
     }
     
-    internal func setupStaticViews() {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else {
+            print("No touching")
+            return
+        }
+        
+        let touchLocationInView = touch.location(in: view)
+        print("You touched \(touchLocationInView)")
+        
+        move(view: flinger, to: CGPoint(x: touchLocationInView.x, y: flinger.center.y))
+    }
+    
+    func move(view: UIView, to point: CGPoint) {
+        animator = UIViewPropertyAnimator(duration: 0.25, curve: .linear) {
+            self.view.layoutIfNeeded()
+        }
+        
+        view.snp.remakeConstraints { (view) in
+            view.center.equalTo(point)
+            view.size.equalTo(CGSize(width: 100, height: 100))
+        }
+        
+        animator?.startAnimation()
+        
+        pooCarrier = UIImageView(frame: .zero)
+        pooCarrier?.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pooCarrier!)
+        
+        let _ = [
+            pooCarrier?.bottomAnchor.constraint(equalTo: flinger.topAnchor, constant: 25.0),
+            pooCarrier?.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pooCarrier?.widthAnchor.constraint(equalToConstant: 50),
+            pooCarrier?.heightAnchor.constraint(equalToConstant: 50),
+            ].map {
+                $0?.isActive = true
+        }
+        
+        pooCarrier?.backgroundColor = .clear
+        pooCarrier?.image = #imageLiteral(resourceName: "poo")
+        
+        print("made a poo")
+        
+        flingPoo()
+    }
+    
+    func setupStaticViews() {
         flinger = UIView(frame: .zero)
         flinger.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(flinger)
@@ -65,7 +112,7 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
             flinger.widthAnchor.constraint(equalToConstant: 100),
             flinger.heightAnchor.constraint(equalToConstant: 100),
             
-            target.topAnchor.constraint(equalTo: view.topAnchor, constant: 8.0),
+            target.topAnchor.constraint(equalTo: view.topAnchor, constant: -100.0),
             target.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             target.widthAnchor.constraint(equalToConstant: 200),
             target.heightAnchor.constraint(equalToConstant: 200)
@@ -85,7 +132,7 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         view.addSubview(pooCarrier!)
         
         let _ = [
-            pooCarrier?.bottomAnchor.constraint(equalTo: flinger.topAnchor, constant: 8.0),
+            pooCarrier?.bottomAnchor.constraint(equalTo: flinger.topAnchor, constant: 6.0),
             pooCarrier?.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             pooCarrier?.widthAnchor.constraint(equalToConstant: 50),
             pooCarrier?.heightAnchor.constraint(equalToConstant: 50),
@@ -100,8 +147,6 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
     }
     
     internal func flingPoo() {
-        setupPoo()
-        
         animator = UIViewPropertyAnimator(duration: 3.0, curve: .easeIn, animations: {
             self.pooCarrier?.transform = CGAffineTransform(translationX: 0, y: -self.view.frame.maxY)
         })
@@ -110,9 +155,6 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        flingPoo()
+        //flingPoo()
     }
 }
-
-
-
