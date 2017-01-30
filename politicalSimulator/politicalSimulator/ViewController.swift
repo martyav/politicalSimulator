@@ -95,6 +95,49 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         print("made a poo")
         
         flingPoo()
+
+// this never hits -- why?
+//        if (pooCarrier?.frame.contains(CGPoint(x: (pooCarrier?.frame.maxX)!, y: target.frame.maxY)))! {
+//            target.isHidden = true
+//            print("hit")
+//        }
+    }
+    
+    func bounce() {
+        if let unwrapPoo = pooCarrier {
+            colliding = UICollisionBehavior(items: [unwrapPoo])
+            colliding?.collisionDelegate = self
+            
+            if let collission = colliding {
+                collission.translatesReferenceBoundsIntoBoundary = true
+                self.dynamicAnimator?.addBehavior(collission)
+            }
+            
+            colliding?.addBoundary(withIdentifier: "face" as NSCopying, from: CGPoint(x: view.frame.minX, y: view.frame.minY), to: CGPoint(x: view.frame.maxX, y: view.frame.minY))
+            
+            self.dynamicPhysics = UIDynamicItemBehavior(items: [unwrapPoo])
+            dynamicPhysics.allowsRotation = true
+            dynamicPhysics.elasticity = 0.9
+            dynamicPhysics.addAngularVelocity(7.0, for: unwrapPoo)
+            dynamicAnimator?.addBehavior(dynamicPhysics)
+        }
+    }
+    
+    func collisionBehavior(_ behavior: UICollisionBehavior, beganContactFor item: UIDynamicItem, withBoundaryIdentifier identifier: NSCopying?, at p: CGPoint) {
+        print("Contact - \(identifier)")
+        
+        // this only works because the target is the only boundary with an identifier...if we add more boundaries with identifiers, we'll have to eff around with this & NSCopying
+        if identifier != nil {
+            if score > hiScore {
+                hiScore = score
+                prefs.setValue("\(hiScore)", forKey: "hiScoreStored")
+                //hiScoreDisplay.text = "High: \(hiScore)"
+            }
+            
+            score += 1
+            print("Collide")
+            //scoreDisplay.text = String(score)
+        }
     }
     
     func setupStaticViews() {
@@ -147,7 +190,7 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
     }
     
     internal func flingPoo() {
-        animator = UIViewPropertyAnimator(duration: 3.0, curve: .easeIn, animations: {
+        animator = UIViewPropertyAnimator(duration: 1.0, curve: .easeIn, animations: {
             self.pooCarrier?.transform = CGAffineTransform(translationX: 0, y: -self.view.frame.maxY)
         })
         
@@ -155,6 +198,6 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        //flingPoo()
+        // where should bounce() go?
     }
 }
